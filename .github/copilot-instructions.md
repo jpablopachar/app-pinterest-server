@@ -366,3 +366,15 @@ This pattern demonstrates:
 ### Documentation
 - The generated documentation should be in Spanish.
 - Use JSDoc comments for all functions, including parameters and return types.
+
+## Good general practices
+- Always validate the parameters at the beginning of the functions
+- Applies solid principles in all implementations
+- Apply DRY (Don't Repeat Yourself) principles
+- Apply clean code principles
+- Use descriptive variable and function names
+- Use consistent formatting (indentation, spacing, etc.)
+- Use async/await for asynchronous operations
+- Use try/catch blocks to handle errors gracefully
+- Use environment variables for sensitive information (e.g., database connection strings, API keys)
+- Use a consistent error handling strategy (e.g., custom error classes, middleware)
