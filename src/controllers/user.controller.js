@@ -14,19 +14,12 @@ import { responseReturn } from '../utils/res.util.js'
  * @returns {Promise<void>} No retorna ningún valor directamente, pero envía una respuesta HTTP al cliente.
  *
  * @description
- * Esta función valida los campos requeridos (username, email y password) del cuerpo de la solicitud.
- * Si falta alguno, responde con un error 400. Si todos los campos están presentes, hashea la contraseña,
- * crea un nuevo usuario en la base de datos y genera un token JWT. El token se almacena en una cookie httpOnly.
+ * Esta función crea un nuevo usuario en la base de datos y genera un token JWT.
+ * El token se almacena en una cookie httpOnly.
  * Finalmente, responde con los detalles del usuario (sin la contraseña).
  */
 export const registerUser = async (req, res) => {
   const { username, displayName, email, password } = req.body
-
-  if (!username || !email || !password) {
-    return responseReturn(res, 400, {
-      message: 'Todos los campos son requeridos!',
-    })
-  }
 
   const newHashedPassword = await bcrypt.hash(password, 10)
 
