@@ -220,3 +220,73 @@ export const getUser = async (req, res) => {
     })
   }
 }
+
+/**
+ * Permite a un usuario seguir a otro usuario.
+ *
+ * Este controlador busca al usuario objetivo por su nombre de usuario,
+ * verifica que el usuario que realiza la acción esté autenticado y
+ * crea una nueva relación de seguimiento si no existe previamente.
+ *
+ * @async
+ * @function followUser
+ * @param {import('express').Request} req - Objeto de solicitud de Express, debe contener el username como parámetro de ruta y el token del usuario autenticado.
+ * @param {import('express').Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<void>} No retorna ningún valor directamente, pero envía la respuesta HTTP correspondiente.
+ */
+export const followUser = async (req, res) => {
+  debug('Iniciando seguimiento de usuario', {
+    params: req.params,
+    userId: req.user._id,
+  })
+
+  try {
+    const { username } = req.params
+    const followerUserId = req.user._id
+
+    // Buscar al usuario a seguir por su nombre de usuario
+    const userToFollow = await User.findOne({ username })
+
+    if (!userToFollow) {
+      error(`Usuario a seguir no encontrado: ${username}`)
+
+      return responseReturn(res, 404, {
+        message: `No se encontró un usuario con el nombre de usuario: ${username}`,
+      })
+    }
+
+    // Verificar si ya existe la relación de seguimiento
+    const existingFollow = await Follow.exists({
+      follower: followerUserId,
+      following: userToFollow._id,
+    })
+
+    if (existingFollow) {
+      await Follow.deleteOne({
+        follower: followerUserId,
+        following: userToFollow._id,
+      })
+
+      info(`El usuario ${followerUserId} dejó de seguir a ${username}`)
+    } else {
+      await Follow.create({
+        follower: followerUserId,
+        following: userToFollow._id,
+      })
+
+      info(`El usuario ${followerUserId} comenzó a seguir a ${username}`)
+    }
+
+    responseReturn(res, 200, { message: 'Satisfactorio' })
+  } catch (err) {
+    error('Error al seguir al usuario', {
+      error: err.message,
+      stack: err.stack,
+    })
+
+    responseReturn(res, 500, {
+      message: 'Error al seguir al usuario',
+      error: err.message,
+    })
+  }
+}
