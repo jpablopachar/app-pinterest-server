@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { JWT_SECRET, NODE_ENV } from '../constants/config.js'
 import User from '../models/user.model.js'
+import { debug, info } from '../utils/logger.js'
 import { responseReturn } from '../utils/res.util.js'
 
 /**
@@ -19,6 +20,8 @@ import { responseReturn } from '../utils/res.util.js'
  * Finalmente, responde con los detalles del usuario (sin la contraseña).
  */
 export const registerUser = async (req, res) => {
+  debug('Iniciando registro de usuario', { body: req.body });
+
   const { username, displayName, email, password } = req.body
 
   const newHashedPassword = await bcrypt.hash(password, 10)
@@ -39,6 +42,8 @@ export const registerUser = async (req, res) => {
   })
 
   const { hashedPassword, ...detailsWithoutPassword } = user.toObject()
+
+  info('Usuario registrado con éxito', detailsWithoutPassword)
 
   responseReturn(res, 201, detailsWithoutPassword)
 }
