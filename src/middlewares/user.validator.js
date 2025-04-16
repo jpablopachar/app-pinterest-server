@@ -28,3 +28,15 @@ export const validateUserRequest = [
     .withMessage('La contraseña debe tener al menos 6 caracteres'),
   handleValidationErrors,
 ]
+
+export const validateLoginRequest = [
+  body('email')
+    .isEmail()
+    .notEmpty()
+    .withMessage('El correo electrónico es requerido'),
+  body('password')
+    .isString()
+    .notEmpty()
+    .withMessage('La contraseña es requerida'),
+  handleValidationErrors,
+]
