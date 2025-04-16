@@ -368,7 +368,7 @@ This pattern demonstrates:
 - Use JSDoc comments for all functions, including parameters and return types.
 
 ## Good general practices
-- Always validate the parameters at the beginning of the functions
+- Always validate the parameters at the beginning of the functions with express-validator
 - Applies solid principles in all implementations
 - Apply DRY (Don't Repeat Yourself) principles
 - Apply clean code principles
