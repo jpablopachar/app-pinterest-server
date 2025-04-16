@@ -1,4 +1,4 @@
-import { body } from 'express-validator'
+import { body, param } from 'express-validator'
 import { handleValidationErrors } from './validation.js'
 
 /**
@@ -39,4 +39,11 @@ export const validateLoginRequest = [
     .notEmpty()
     .withMessage('La contraseña es requerida'),
   handleValidationErrors,
+]
+
+export const validateGetUserParams = [
+  param('username')
+    .isString()
+    .notEmpty()
+    .withMessage('El nombre de usuario es requerido'),
 ]

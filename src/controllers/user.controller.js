@@ -3,6 +3,7 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { JWT_SECRET, NODE_ENV } from '../constants/config.js'
+import Follow from '../models/follow.model.js'
 import User from '../models/user.model.js'
 import { debug, error, info } from '../utils/logger.js'
 import { responseReturn } from '../utils/res.util.js'
@@ -88,6 +89,8 @@ export const loginUser = async (req, res) => {
     })
 
     if (!user) {
+      error(`Usuario no encontrado con email/username: ${login}`)
+
       return responseReturn(res, 401, {
         message: 'Credenciales incorrectas',
       })
@@ -97,6 +100,10 @@ export const loginUser = async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.hashedPassword)
 
     if (!isPasswordValid) {
+      error(
+        `Las credenciales con el login: ${login} y la contraseña: ${password} son incorrectas`
+      )
+
       return responseReturn(res, 401, {
         message: 'Credenciales incorrectas',
       })
@@ -125,6 +132,90 @@ export const loginUser = async (req, res) => {
 
     responseReturn(res, 500, {
       message: 'Error al iniciar sesión',
+      error: err.message,
+    })
+  }
+}
+
+/**
+ * Obtiene la información de un usuario por su nombre de usuario.
+ *
+ * Este controlador busca un usuario en la base de datos utilizando el nombre
+ * de usuario proporcionado como parámetro en la URL. Devuelve los detalles
+ * del usuario encontrado (sin la contraseña) o un error si el usuario no existe.
+ *
+ * @async
+ * @function getUser
+ * @param {import('express').Request} req - Objeto de solicitud de Express, debe contener el username como parámetro de ruta.
+ * @param {import('express').Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<void>} No retorna ningún valor directamente, pero envía la respuesta HTTP correspondiente.
+ */
+export const getUser = async (req, res) => {
+  debug('Iniciando búsqueda de usuario por nombre de usuario', {
+    params: req.params,
+  })
+
+  try {
+    const { username } = req.params
+
+    const user = await User.findOne({ username })
+
+    if (!user) {
+      error(`Usuario no encontrado con el nombre de usuario: ${username}`)
+
+      return responseReturn(res, 404, {
+        message: `No se encontró un usuario con el nombre de usuario: ${username}`,
+      })
+    }
+
+    const { hashedPassword, ...detailsWithoutPassword } = user.toObject()
+
+    const followerCount = await Follow.countDocuments({ following: user._id })
+
+    const followingCount = await Follow.countDocuments({ follower: user._id })
+
+    const token = req.cookies.token
+
+    if (!token) {
+      const response = {
+        ...detailsWithoutPassword,
+        followerCount,
+        followingCount,
+        isFollowing: false,
+      }
+
+      info('Usuario encontrado sin token', detailsWithoutPassword)
+
+      return responseReturn(res, 200, response)
+    } else {
+      jwt.verify(token, JWT_SECRET, async (errorJwt, payload) => {
+        if (!errorJwt) {
+          const isExists = await Follow.exists({
+            follower: payload.userId,
+            following: user._id,
+          })
+
+          const response = {
+            ...detailsWithoutPassword,
+            followerCount,
+            followingCount,
+            isFollowing: isExists ? true : false,
+          }
+
+          info('Usuario encontrado con token', response)
+
+          responseReturn(res, 200, response)
+        }
+      })
+    }
+  } catch (err) {
+    error('Error al buscar el usuario', {
+      error: err.message,
+      stack: err.stack,
+    })
+
+    responseReturn(res, 500, {
+      message: 'Error al buscar el usuario',
       error: err.message,
     })
   }
