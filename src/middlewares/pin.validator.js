@@ -21,11 +21,11 @@ export const validatePinRequest = [
     .isString()
     .notEmpty()
     .withMessage('La descripción es requerida'),
-  body('media')
+  /* body('media')
     .isString()
     .notEmpty()
     .withMessage('La URL del media es requerida'),
-  handleValidationErrors,
+  handleValidationErrors, */
 ]
 
 /**

@@ -1,3 +1,11 @@
+import ImageKit from 'imagekit'
+import sharp from 'sharp'
+import {
+  IMAGEKIT_PRIVATE_KEY,
+  IMAGEKIT_PUBLIC_KEY,
+  IMAGEKIT_URL_ENDPOINT,
+} from '../constants/config.js'
+import Board from '../models/board.model.js'
 import Pin from '../models/pin.model.js'
 import { debug, error, info } from '../utils/logger.js'
 import { responseReturn } from '../utils/res.util.js'
@@ -88,7 +96,10 @@ export const getPin = async (req, res) => {
   try {
     const { id } = req.params
 
-    const pin = await Pin.findById(id).populate('user', 'username img displayName')
+    const pin = await Pin.findById(id).populate(
+      'user',
+      'username img displayName'
+    )
 
     if (!pin) {
       return responseReturn(res, 404, {
@@ -131,23 +142,131 @@ export const createPin = async (req, res) => {
   debug('Iniciando creación de pin', { body: req.body })
 
   try {
-    const { title, description, media, width, height, link, board, tags } = req.body
-
-    const newPin = await Pin.create({
+    const {
       title,
       description,
-      media,
-      width,
-      height,
       link,
       board,
       tags,
-      user: req.userId
+      textOptions,
+      canvasOptions,
+      newBoard,
+    } = req.body
+
+    const media = req.files.media
+
+    const parsedTextOptions = JSON.parse(textOptions || '{}')
+    const parsedCanvasOptions = JSON.parse(canvasOptions || '{}')
+
+    const metadata = await sharp(media.data).metadata()
+
+    const originalOrientation =
+      metadata.width < metadata.height ? 'portrait' : 'landscape'
+    const originalAspectRatio = metadata.width / metadata.height
+
+    let clientAspectRatio
+    let width
+    let height
+
+    if (parsedCanvasOptions.size !== 'original') {
+      clientAspectRatio =
+        parsedCanvasOptions.size.split(':')[0] /
+        parsedCanvasOptions.size.split(':')[1]
+    } else {
+      if (parsedCanvasOptions.orientation === originalOrientation) {
+        clientAspectRatio = originalOrientation
+      } else {
+        clientAspectRatio = 1 / originalAspectRatio
+      }
+    }
+
+    width = metadata.width
+    height = metadata.width / clientAspectRatio
+
+    const imageKit = new ImageKit({
+      publicKey: IMAGEKIT_PUBLIC_KEY,
+      privateKey: IMAGEKIT_PRIVATE_KEY,
+      urlEndpoint: IMAGEKIT_URL_ENDPOINT,
     })
 
-    info('Pin creado con éxito', newPin)
+    const textLeftPosition = Math.round((parsedTextOptions.left * width) / 375)
 
-    responseReturn(res, 201, newPin)
+    const textTopPosition = Math.round(
+      (parsedTextOptions.top * height) / parsedCanvasOptions.height
+    )
+
+    let croppingStrategy = ''
+
+    if (parsedCanvasOptions.size !== 'original') {
+      if (originalAspectRatio > clientAspectRatio) {
+        croppingStrategy = ',cm-pad_resize'
+      }
+    } else {
+      if (
+        originalOrientation === 'landscape' &&
+        parsedCanvasOptions.orientation === 'portrait'
+      ) {
+        croppingStrategy = ',cm-pad_resize'
+      }
+    }
+
+    const transformationString = `w-${width},h-${height}${croppingStrategy},bg-${parsedCanvasOptions.backgroundColor.substring(
+      1
+    )}${
+      parsedTextOptions.text
+        ? `,l-text,i-${parsedTextOptions.text},fs-${
+            parsedTextOptions.fontSize * 2.1
+          },lx-${textLeftPosition},ly-${textTopPosition},co-${parsedTextOptions.color.substring(
+            1
+          )},l-end`
+        : ''
+    }`
+
+    imageKit
+      .upload({
+        file: media.data,
+        fileName: media.name,
+        folder: 'app-pinterest',
+        transformation: { pre: transformationString },
+      })
+      .then(async (result) => {
+        let newBoardId
+
+        if (newBoard) {
+          const res = await Board.create({
+            title: newBoard,
+            user: req.userId,
+          })
+
+          newBoardId = res._id
+        }
+
+        const newPin = await Pin.create({
+          user: req.userId,
+          title,
+          description,
+          link: link || null,
+          board: newBoardId || board || null,
+          tags: tags ? tags.split(',').map((tag) => tag.trim()) : [],
+          media: result.filePath,
+          width: result.width,
+          height: result.height,
+        })
+
+        info('Pin creado con éxito', newPin)
+
+        responseReturn(res, 201, newPin)
+      }).catch((errorTemp) => {
+        error('Error al subir la imagen a ImageKit', {
+          error: errorTemp.message,
+          stack: errorTemp.stack,
+        })
+
+        responseReturn(res, 500, {
+          message: 'Error al subir la imagen a ImageKit',
+          error: errorTemp.message,
+        })
+      })
   } catch (err) {
     error('Error al crear pin', {
       error: err.message,
