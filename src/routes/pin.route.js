@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { getPins } from '../controllers/pin.controller.js'
+import { getPin, getPins } from '../controllers/pin.controller.js'
 
 /**
  * Router para gestionar los pines de la aplicación.
@@ -19,3 +19,12 @@ export const pinRouter = Router()
  * @memberof module:pinRouter
  */
 pinRouter.get('/', getPins)
+
+/**
+ * Obtiene un pin específico por su ID.
+ *
+ * @name GET /pins/:id
+ * @function
+ * @memberof module:pinRouter
+ */
+pinRouter.get('/:id', getPin)

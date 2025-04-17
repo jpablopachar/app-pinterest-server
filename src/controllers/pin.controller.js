@@ -66,3 +66,48 @@ export const getPins = async (req, res) => {
     })
   }
 }
+
+/**
+ * Recupera un pin específico por su ID.
+ *
+ * @async
+ * @function
+ * @param {import('express').Request} req - Objeto de solicitud HTTP de Express que contiene el ID del pin en los parámetros.
+ * @param {import('express').Response} res - Objeto de respuesta HTTP de Express.
+ * @returns {Promise<void>} No retorna ningún valor directamente, pero envía la respuesta HTTP con el pin recuperado o un mensaje de error.
+ *
+ * @description
+ * Esta función busca y recupera un pin específico de la base de datos utilizando su ID.
+ * En caso de éxito, retorna el objeto del pin completo.
+ * Si el pin no existe, retorna un mensaje de error 404.
+ * En caso de otros errores, retorna un mensaje descriptivo del problema encontrado.
+ */
+export const getPin = async (req, res) => {
+  debug('Iniciando recuperación de pin por ID', { params: req.params })
+
+  try {
+    const { id } = req.params
+
+    const pin = await Pin.findById(id).populate('user', 'username img displayName')
+
+    if (!pin) {
+      return responseReturn(res, 404, {
+        message: 'Pin no encontrado',
+      })
+    }
+
+    info('Pin recuperado con éxito', pin)
+
+    responseReturn(res, 200, pin)
+  } catch (err) {
+    error('Error al recuperar pin', {
+      error: err.message,
+      stack: err.stack,
+    })
+
+    responseReturn(res, 500, {
+      message: 'Error al recuperar pin',
+      error: err.message,
+    })
+  }
+}
