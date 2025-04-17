@@ -111,3 +111,52 @@ export const getPin = async (req, res) => {
     })
   }
 }
+
+/**
+ * Crea un nuevo pin en la base de datos.
+ *
+ * @async
+ * @function
+ * @param {import('express').Request} req - Objeto de solicitud HTTP de Express que contiene los datos del pin en el cuerpo.
+ * @param {import('express').Response} res - Objeto de respuesta HTTP de Express.
+ * @returns {Promise<void>} No retorna ningún valor directamente, pero envía la respuesta HTTP con el pin creado o un mensaje de error.
+ *
+ * @description
+ * Esta función crea un nuevo pin utilizando los datos proporcionados en el cuerpo de la solicitud.
+ * Asocia automáticamente el pin al usuario autenticado que realiza la solicitud.
+ * En caso de éxito, retorna el objeto del pin recién creado con un estado 201.
+ * En caso de error, retorna un mensaje descriptivo del problema encontrado con un estado 500.
+ */
+export const createPin = async (req, res) => {
+  debug('Iniciando creación de pin', { body: req.body })
+
+  try {
+    const { title, description, media, width, height, link, board, tags } = req.body
+
+    const newPin = await Pin.create({
+      title,
+      description,
+      media,
+      width,
+      height,
+      link,
+      board,
+      tags,
+      user: req.userId
+    })
+
+    info('Pin creado con éxito', newPin)
+
+    responseReturn(res, 201, newPin)
+  } catch (err) {
+    error('Error al crear pin', {
+      error: err.message,
+      stack: err.stack,
+    })
+
+    responseReturn(res, 500, {
+      message: 'Error al crear pin',
+      error: err.message,
+    })
+  }
+}

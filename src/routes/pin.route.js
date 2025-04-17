@@ -1,5 +1,7 @@
 import { Router } from 'express'
-import { getPin, getPins } from '../controllers/pin.controller.js'
+import { createPin, getPin, getPins } from '../controllers/pin.controller.js'
+import { validatePinIdParam, validatePinRequest } from '../middlewares/pin.validator.js'
+import { verifyToken } from '../middlewares/verifyToken.validator.js'
 
 /**
  * Router para gestionar los pines de la aplicación.
@@ -27,4 +29,13 @@ pinRouter.get('/', getPins)
  * @function
  * @memberof module:pinRouter
  */
-pinRouter.get('/:id', getPin)
+pinRouter.get('/:id', validatePinIdParam, getPin)
+
+/**
+ * Crea un nuevo pin.
+ *
+ * @name POST /pins
+ * @function
+ * @memberof module:pinRouter
+ */
+pinRouter.post('/', verifyToken, validatePinRequest, createPin)
