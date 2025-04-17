@@ -4,6 +4,7 @@ import express from 'express'
 import fileUpload from 'express-fileupload'
 import morgan from 'morgan'
 import { CLIENT_URL, PORT } from './constants/config.js'
+import { pinRouter } from './routes/pin.route.js'
 import { userRouter } from './routes/user.route.js'
 import { dbConnect } from './utils/db.js'
 
@@ -17,6 +18,7 @@ app.use(cookieParser())
 app.use(fileUpload())
 
 app.use('/users', userRouter)
+app.use('/pins', pinRouter)
 
 dbConnect().then(() => {
   app.listen(PORT, () => {
