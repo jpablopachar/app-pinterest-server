@@ -81,15 +81,13 @@ export const loginUser = async (req, res) => {
   debug('Iniciando inicio de sesión de usuario', { body: req.body })
 
   try {
-    const { login, password } = req.body
+    const { email, password } = req.body
 
     // Buscar usuario por email o username
-    const user = await User.findOne({
-      $or: [{ email: login }, { username: login }],
-    })
+    const user = await User.findOne({ email })
 
     if (!user) {
-      error(`Usuario no encontrado con email/username: ${login}`)
+      error(`Usuario no encontrado con email: ${email}`)
 
       return responseReturn(res, 401, {
         message: 'Credenciales incorrectas',
@@ -101,7 +99,7 @@ export const loginUser = async (req, res) => {
 
     if (!isPasswordValid) {
       error(
-        `Las credenciales con el login: ${login} y la contraseña: ${password} son incorrectas`
+        `Las credenciales con el email: ${email} y la contraseña: ${password} son incorrectas`
       )
 
       return responseReturn(res, 401, {
@@ -237,12 +235,12 @@ export const getUser = async (req, res) => {
 export const followUser = async (req, res) => {
   debug('Iniciando seguimiento de usuario', {
     params: req.params,
-    userId: req.user._id,
+    userId: req.userId,
   })
 
   try {
     const { username } = req.params
-    const followerUserId = req.user._id
+    const followerUserId = req.userId
 
     // Buscar al usuario a seguir por su nombre de usuario
     const userToFollow = await User.findOne({ username })
@@ -286,6 +284,28 @@ export const followUser = async (req, res) => {
 
     responseReturn(res, 500, {
       message: 'Error al seguir al usuario',
+      error: err.message,
+    })
+  }
+}
+
+export const logoutUser = async (_, res) => {
+  debug('Iniciando cierre de sesión de usuario')
+
+  try {
+    res.clearCookie('token')
+
+    responseReturn(res, 200, { message: 'Sesión cerrada con éxito' })
+
+    info('Sesión cerrada con éxito')
+  } catch (err) {
+    error('Error al cerrar sesión', {
+      error: err.message,
+      stack: err.stack,
+    })
+
+    responseReturn(res, 500, {
+      message: 'Error al cerrar sesión',
       error: err.message,
     })
   }

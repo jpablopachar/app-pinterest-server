@@ -9,6 +9,7 @@ import { dbConnect } from './utils/db.js'
 
 const app = express()
 
+app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(morgan('dev'))
 app.use(cors({ origin: CLIENT_URL, credentials: true }))
