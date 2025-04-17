@@ -5,6 +5,7 @@ import fileUpload from 'express-fileupload'
 import morgan from 'morgan'
 import { CLIENT_URL, PORT } from './constants/config.js'
 import { userRouter } from './routes/user.route.js'
+import { dbConnect } from './utils/db.js'
 
 const app = express()
 
@@ -16,6 +17,8 @@ app.use(fileUpload())
 
 app.use('/users', userRouter)
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`)
+dbConnect().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`)
+  })
 })

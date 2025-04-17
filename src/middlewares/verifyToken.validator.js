@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
-import { JWT_SECRET } from '../constants/config'
-import { responseReturn } from '../utils/res.util'
+import { JWT_SECRET } from '../constants/config.js'
+import { responseReturn } from '../utils/res.util.js'
 
 /**
  * Middleware para verificar la validez del token JWT en las cookies de la solicitud.

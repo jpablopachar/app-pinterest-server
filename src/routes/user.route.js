@@ -6,7 +6,6 @@ import {
   registerUser,
 } from '../controllers/user.controller.js'
 import {
-  validateFollowUserParams,
   validateGetUserParams,
   validateLoginRequest,
   validateUserRequest,
@@ -18,4 +17,4 @@ export const userRouter = Router()
 userRouter.post('/auth/register', validateUserRequest, registerUser)
 userRouter.post('/auth/login', validateLoginRequest, loginUser)
 userRouter.get('/:username', validateGetUserParams, getUser)
-userRouter.post('/follow/:username', verifyToken, validateFollowUserParams, followUser)
+userRouter.post('/follow/:username', verifyToken, validateGetUserParams, followUser)

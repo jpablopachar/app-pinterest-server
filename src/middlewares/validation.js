@@ -1,5 +1,5 @@
 import { validationResult } from 'express-validator'
-import { responseReturn } from '../utils/response'
+import { responseReturn } from '../utils/res.util.js'
 
 /**
  * Middleware para manejar errores de validación en las solicitudes.
