@@ -1,12 +1,16 @@
 import ImageKit from 'imagekit'
+import jwt from 'jsonwebtoken'
 import sharp from 'sharp'
 import {
   IMAGEKIT_PRIVATE_KEY,
   IMAGEKIT_PUBLIC_KEY,
   IMAGEKIT_URL_ENDPOINT,
+  JWT_SECRET,
 } from '../constants/config.js'
 import Board from '../models/board.model.js'
+import Like from '../models/like.model.js'
 import Pin from '../models/pin.model.js'
+import Save from '../models/save.model.js'
 import { debug, error, info } from '../utils/logger.js'
 import { responseReturn } from '../utils/res.util.js'
 
@@ -256,7 +260,8 @@ export const createPin = async (req, res) => {
         info('Pin creado con éxito', newPin)
 
         responseReturn(res, 201, newPin)
-      }).catch((errorTemp) => {
+      })
+      .catch((errorTemp) => {
         error('Error al subir la imagen a ImageKit', {
           error: errorTemp.message,
           stack: errorTemp.stack,
@@ -275,6 +280,147 @@ export const createPin = async (req, res) => {
 
     responseReturn(res, 500, {
       message: 'Error al crear pin',
+      error: err.message,
+    })
+  }
+}
+
+/**
+ * Verifica la interacción de un usuario con un pin específico.
+ *
+ * Este controlador obtiene el número de "likes" de un pin y determina si el usuario autenticado
+ * ha dado "like" o ha guardado el pin. Si el usuario no está autenticado, solo retorna el contador de "likes".
+ *
+ * @async
+ * @function
+ * @param {import('express').Request} req - Objeto de solicitud HTTP de Express.
+ * @param {import('express').Response} res - Objeto de respuesta HTTP de Express.
+ * @returns {Promise<void>} No retorna ningún valor directamente, responde al cliente con los datos de interacción.
+ *
+ * @throws Retorna un error 500 si ocurre algún problema al recuperar la información del pin.
+ */
+export const interactionCheck = async (req, res) => {
+  debug('Iniciando verificación de interacción', { params: req.params })
+
+  try {
+    const { id } = req.params
+
+    const token = req.cookies.token
+    const likeCount = await Like.countDocuments({ pin: id })
+
+    info('Contador de likes recuperado con éxito', {
+      likeCount,
+      isLiked: false,
+      isSaved: false,
+    })
+
+    if (!token)
+      return responseReturn(res, 200, {
+        likeCount,
+        isLiked: false,
+        isSaved: false,
+      })
+
+    jwt.verify(token, JWT_SECRET, async (errorJwt, payload) => {
+      if (errorJwt) {
+        info('Token inválido', errorJwt)
+
+        return responseReturn(res, 200, {
+          likeCount,
+          isLiked: false,
+          isSaved: false,
+        })
+      }
+
+      const userId = payload.userId
+
+      const isLiked = await Like.findOne({ user: userId, pin: id })
+      const isSaved = await Save.findOne({ user: userId, _id: id })
+
+      info('Contador de likes recuperado con éxito', {
+        likeCount,
+        isLiked: isLiked ? true : false,
+        isSaved: isSaved ? true : false,
+      })
+
+      return responseReturn(res, 200, {
+        likeCount,
+        isLiked: isLiked ? true : false,
+        isSaved: isSaved ? true : false,
+      })
+    })
+  } catch (err) {
+    error('Error al recuperar pin', {
+      error: err.message,
+      stack: err.stack,
+    })
+
+    responseReturn(res, 500, {
+      message: 'Error al recuperar pin',
+      error: err.message,
+    })
+  }
+}
+
+/**
+ * Controlador para interactuar con un pin (dar like o guardar).
+ * Permite al usuario alternar entre dar/quitar like o guardar/quitar guardado en un pin específico.
+ *
+ * @async
+ * @function
+ * @param {import('express').Request} req - Objeto de solicitud de Express, debe contener el ID del pin en los parámetros y el tipo de interacción ('like' o 'save') en el cuerpo.
+ * @param {import('express').Response} res - Objeto de respuesta de Express.
+ * @returns {Promise<void>} Devuelve una respuesta HTTP con el resultado de la interacción.
+ *
+ * @throws {Error} Retorna un error 500 si ocurre algún problema durante la interacción.
+ */
+export const interact = async (req, res) => {
+  debug('Iniciando interacción con el pin', { params: req.params, body: req.body })
+
+  try {
+    const { id } = req.params
+
+    const { type } = req.body
+
+    if (type === 'like') {
+      const isLiked = await Like.findOne({ pin: id, user: req.userId })
+
+      info('Verificando like', { isLiked })
+
+      if (isLiked) {
+        await Like.deleteOne({ pin: id, user: req.userId })
+
+        info('Like eliminado con éxito', { pinId: id, userId: req.userId })
+      } else {
+        await Like.create({ pin: id, user: req.userId })
+
+        info('Like agregado con éxito', { pinId: id, userId: req.userId })
+      }
+    } else {
+      const isSaved = await Save.findOne({ pin: id, user: req.userId })
+
+      info('Verificando guardado', { isSaved })
+
+      if (isSaved) {
+        await Save.deleteOne({ pin: id, user: req.userId })
+
+        info('Guardado eliminado con éxito', { pinId: id, userId: req.userId })
+      } else {
+        await Save.create({ pin: id, user: req.userId })
+
+        info('Guardado agregado con éxito', { pinId: id, userId: req.userId })
+      }
+    }
+
+    return responseReturn(res, 200, { message: 'Interacción exitosa' })
+  } catch (err) {
+    error('Error al interactuar con el pin', {
+      error: err.message,
+      stack: err.stack,
+    })
+
+    responseReturn(res, 500, {
+      message: 'Error al interactuar con el pin',
       error: err.message,
     })
   }
