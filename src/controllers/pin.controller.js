@@ -335,7 +335,7 @@ export const interactionCheck = async (req, res) => {
       const userId = payload.userId
 
       const isLiked = await Like.findOne({ user: userId, pin: id })
-      const isSaved = await Save.findOne({ user: userId, _id: id })
+      const isSaved = await Save.findOne({ user: userId, pin: id })
 
       info('Contador de likes recuperado con éxito', {
         likeCount,
@@ -375,40 +375,45 @@ export const interactionCheck = async (req, res) => {
  * @throws {Error} Retorna un error 500 si ocurre algún problema durante la interacción.
  */
 export const interact = async (req, res) => {
-  debug('Iniciando interacción con el pin', { params: req.params, body: req.body })
+  debug('Iniciando interacción con el pin', {
+    params: req.params,
+    body: req.body,
+  })
 
   try {
     const { id } = req.params
 
     const { type } = req.body
 
+    const userId = req.userId
+
     if (type === 'like') {
-      const isLiked = await Like.findOne({ pin: id, user: req.userId })
+      const isLiked = await Like.findOne({ pin: id, user: userId })
 
       info('Verificando like', { isLiked })
 
       if (isLiked) {
-        await Like.deleteOne({ pin: id, user: req.userId })
+        await Like.deleteOne({ pin: id, user: userId })
 
-        info('Like eliminado con éxito', { pinId: id, userId: req.userId })
+        info('Like eliminado con éxito', { pinId: id, userId: userId })
       } else {
-        await Like.create({ pin: id, user: req.userId })
+        await Like.create({ pin: id, user: userId })
 
-        info('Like agregado con éxito', { pinId: id, userId: req.userId })
+        info('Like agregado con éxito', { pinId: id, userId: userId })
       }
     } else {
-      const isSaved = await Save.findOne({ pin: id, user: req.userId })
+      const isSaved = await Save.findOne({ pin: id, user: userId })
 
       info('Verificando guardado', { isSaved })
 
       if (isSaved) {
-        await Save.deleteOne({ pin: id, user: req.userId })
+        await Save.deleteOne({ pin: id, user: userId })
 
-        info('Guardado eliminado con éxito', { pinId: id, userId: req.userId })
+        info('Guardado eliminado con éxito', { pinId: id, userId: userId })
       } else {
-        await Save.create({ pin: id, user: req.userId })
+        await Save.create({ pin: id, user: userId })
 
-        info('Guardado agregado con éxito', { pinId: id, userId: req.userId })
+        info('Guardado agregado con éxito', { pinId: id, userId: userId })
       }
     }
 
