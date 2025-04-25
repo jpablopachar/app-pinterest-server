@@ -3,7 +3,7 @@ import cors from 'cors'
 import express from 'express'
 import fileUpload from 'express-fileupload'
 import morgan from 'morgan'
-import { CLIENT_URL, PORT } from './constants/config.js'
+import { CLIENT_ANGULAR_URL, CLIENT_URL, PORT } from './constants/config.js'
 import { boardRouter } from './routes/board.route.js'
 import { commentRouter } from './routes/comment.route.js'
 import { pinRouter } from './routes/pin.route.js'
@@ -15,7 +15,7 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(morgan('dev'))
-app.use(cors({ origin: CLIENT_URL, credentials: true }))
+app.use(cors({ origin: [CLIENT_URL, CLIENT_ANGULAR_URL], credentials: true }))
 app.use(cookieParser())
 app.use(fileUpload())
 
