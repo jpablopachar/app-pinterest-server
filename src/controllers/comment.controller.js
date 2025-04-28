@@ -33,14 +33,14 @@ export const getPostComments = async (req, res) => {
       commentCount: comments.length,
     })
 
-    responseReturn(res, 200, comments)
+    return responseReturn(res, 200, comments)
   } catch (err) {
     error('Error al recuperar comentarios', {
       error: err.message,
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al recuperar comentarios',
       error: err.message,
     })
@@ -77,14 +77,14 @@ export const addComment = async (req, res) => {
 
     info('Comentario creado con éxito', { userId, pinId: pin, comment })
 
-    responseReturn(res, 201, comment)
+    return responseReturn(res, 201, comment)
   } catch (err) {
     error('Error al crear comentario', {
       error: err.message,
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al crear comentario',
       error: err.message,
     })

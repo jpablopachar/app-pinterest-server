@@ -65,14 +65,14 @@ export const getPins = async (req, res) => {
 
     info('Pines recuperados con éxito', response)
 
-    responseReturn(res, 200, response)
+    return responseReturn(res, 200, response)
   } catch (err) {
     error('Error al recuperar pines', {
       error: err.message,
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al recuperar pines',
       error: err.message,
     })
@@ -113,14 +113,14 @@ export const getPin = async (req, res) => {
 
     info('Pin recuperado con éxito', pin)
 
-    responseReturn(res, 200, pin)
+    return responseReturn(res, 200, pin)
   } catch (err) {
     error('Error al recuperar pin', {
       error: err.message,
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al recuperar pin',
       error: err.message,
     })
@@ -259,7 +259,7 @@ export const createPin = async (req, res) => {
 
         info('Pin creado con éxito', newPin)
 
-        responseReturn(res, 201, newPin)
+        return responseReturn(res, 201, newPin)
       })
       .catch((errorTemp) => {
         error('Error al subir la imagen a ImageKit', {
@@ -267,7 +267,7 @@ export const createPin = async (req, res) => {
           stack: errorTemp.stack,
         })
 
-        responseReturn(res, 500, {
+        return responseReturn(res, 500, {
           message: 'Error al subir la imagen a ImageKit',
           error: errorTemp.message,
         })
@@ -278,7 +278,7 @@ export const createPin = async (req, res) => {
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al crear pin',
       error: err.message,
     })
@@ -355,7 +355,7 @@ export const interactionCheck = async (req, res) => {
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al recuperar pin',
       error: err.message,
     })
@@ -424,7 +424,7 @@ export const interact = async (req, res) => {
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al interactuar con el pin',
       error: err.message,
     })

@@ -49,14 +49,14 @@ export const registerUser = async (req, res) => {
 
     info('Usuario registrado con éxito', detailsWithoutPassword)
 
-    responseReturn(res, 201, detailsWithoutPassword)
+    return responseReturn(res, 201, detailsWithoutPassword)
   } catch (err) {
     error('Error al registrar el usuario', {
       error: err.message,
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al registrar el usuario',
       error: err.message,
     })
@@ -121,14 +121,14 @@ export const loginUser = async (req, res) => {
 
     info('Usuario autenticado con éxito', detailsWithoutPassword)
 
-    responseReturn(res, 200, detailsWithoutPassword)
+    return responseReturn(res, 200, detailsWithoutPassword)
   } catch (err) {
     error('Error al iniciar sesión', {
       error: err.message,
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al iniciar sesión',
       error: err.message,
     })
@@ -202,7 +202,7 @@ export const getUser = async (req, res) => {
 
           info('Usuario encontrado con token', response)
 
-          responseReturn(res, 200, response)
+          return responseReturn(res, 200, response)
         }
       })
     }
@@ -212,7 +212,7 @@ export const getUser = async (req, res) => {
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al buscar el usuario',
       error: err.message,
     })
@@ -275,14 +275,14 @@ export const followUser = async (req, res) => {
       info(`El usuario ${followerUserId} comenzó a seguir a ${username}`)
     }
 
-    responseReturn(res, 200, { message: 'Satisfactorio' })
+    return responseReturn(res, 200, { message: 'Satisfactorio' })
   } catch (err) {
     error('Error al seguir al usuario', {
       error: err.message,
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al seguir al usuario',
       error: err.message,
     })
@@ -295,16 +295,16 @@ export const logoutUser = async (_, res) => {
   try {
     res.clearCookie('token')
 
-    responseReturn(res, 200, { message: 'Sesión cerrada con éxito' })
-
     info('Sesión cerrada con éxito')
+
+    return responseReturn(res, 200, { message: 'Sesión cerrada con éxito' })
   } catch (err) {
     error('Error al cerrar sesión', {
       error: err.message,
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al cerrar sesión',
       error: err.message,
     })

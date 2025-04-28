@@ -52,7 +52,7 @@ export const getUserBoards = async (req, res) => {
       stack: err.stack,
     })
 
-    responseReturn(res, 500, {
+    return responseReturn(res, 500, {
       message: 'Error al obtener los tableros del usuario',
       error: err.message,
     })
