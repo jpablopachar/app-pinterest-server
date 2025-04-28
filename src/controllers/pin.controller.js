@@ -111,7 +111,7 @@ export const getPin = async (req, res) => {
       })
     }
 
-    info('Pin recuperado con éxito', pin)
+    info('Pin recuperado con éxito')
 
     return responseReturn(res, 200, pin)
   } catch (err) {
